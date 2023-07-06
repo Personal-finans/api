@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  status    Int?     @default(1)
+  deleted   Boolean? @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile?
+
+  @@map("users")
+}
+
+model Profile {
+  id        Int      @id @default(autoincrement())
+  name      String
+  photoUrl  String?
+  bio       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @unique
+
+  expense Expense[]
+
+  card Card[]
+
+  @@map("profiles")
+}
+
+model Expense {
+  id                   Int      @id @default(autoincrement())
+  creatorId            Int
+  name                 String
+  description          String?
+  totalValue           Decimal
+  numberOfInstallments Int
+  dueDate              DateTime @db.Date
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  Profile   Profile @relation(fields: [profileId], references: [id])
+  profileId Int
+
+  installment Installment[]
+
+  @@map(name: "expenses")
+}
+
+model Installment {
+  id        Int      @id @default(autoincrement())
+  value     Decimal
+  paid      Boolean
+  number    Int
+  dueDate   DateTime @db.Date
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Expense   Expense @relation(fields: [expenseId], references: [id])
+  expenseId Int
+
+  @@map(name: "installments")
+}
+
+model Card {
+  id             Int      @id @default(autoincrement())
+  bankName       String
+  invoiceDueDate Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  Profile   Profile @relation(fields: [profileId], references: [id])
+  profileId Int     @unique
+
+  @@map(name: "cards")
+}
