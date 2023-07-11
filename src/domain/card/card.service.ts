@@ -30,14 +30,7 @@ export class CardService {
 		});
 	}
 
-	async list(userId: number): Promise<Card[]> {
-		const {
-			profile: { id: profileId },
-		} = await this.prismaService.user.findFirst({
-			where: { id: userId },
-			include: { profile: true },
-		});
-
+	async list(profileId: number): Promise<Card[]> {
 		return this.prismaService.card.findMany({
 			where: { profileId },
 		});
