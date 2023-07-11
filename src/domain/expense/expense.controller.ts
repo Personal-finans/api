@@ -8,7 +8,7 @@ import {
 	Put,
 	UseGuards,
 } from '@nestjs/common';
-import { Expense } from '@prisma/client';
+import { Expense, Profile } from '@prisma/client';
 import { ParamId } from '../../decorators/param-id.decorator';
 import { User } from '../../decorators/user.decorator';
 import { AuthGuard } from '../../guards/auth.guard';
@@ -30,8 +30,13 @@ export class ExpenseController {
 	}
 
 	@Get()
-	async list(): Promise<Expense[]> {
-		return this.expenseService.list();
+	async list(@User('profile') { id: profileId }: Profile): Promise<Expense[]> {
+		return this.expenseService.list(profileId);
+	}
+
+	@Get('/statistics')
+	async statistics(@User('profile') { id: profileId }: Profile) {
+		return this.expenseService.statistics(profileId);
 	}
 
 	@Get(':id')

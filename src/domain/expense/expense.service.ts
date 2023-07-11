@@ -12,6 +12,11 @@ import {
 	UpdatePutExpenseDTO,
 } from './dto';
 
+export interface ExpenseStatistics {
+	totalValue: number; // Valor total das despesas deste mês
+	percentChangeLastMonth: number; // Porcentagem de mudança das despesas em relação ao mês passado
+}
+
 @Injectable()
 export class ExpenseService {
 	constructor(
@@ -75,10 +80,111 @@ export class ExpenseService {
 		return this.show(expense.id);
 	}
 
-	async list(): Promise<Expense[]> {
+	async list(profileId: number): Promise<Expense[]> {
 		return this.prismaService.expense.findMany({
+			where: {
+				profileId,
+			},
 			include: { installment: true },
 		});
+	}
+
+	async statistics(profileId: number) {
+		const currentDate = new Date();
+		const currentMonth = currentDate.getMonth() + 1; // Obtemos o mês atual
+		const nextMonth = currentMonth + 1; // Obtemos o próximo mês
+
+		const expenseStatistics: ExpenseStatistics = {
+			totalValue: 0,
+			percentChangeLastMonth: 0,
+		};
+
+		const [nextMonthExpenses, currentMonthExpenses] = await Promise.all([
+			this.prismaService.expense.findMany({
+				where: {
+					profileId,
+					installment: {
+						some: {
+							dueDate: {
+								gte: new Date(currentDate.getFullYear(), nextMonth - 1),
+								lt: new Date(currentDate.getFullYear(), nextMonth),
+							},
+							paid: false,
+						},
+					},
+				},
+				include: {
+					installment: {
+						where: {
+							dueDate: {
+								gte: new Date(currentDate.getFullYear(), nextMonth - 1),
+								lt: new Date(currentDate.getFullYear(), nextMonth),
+							},
+							paid: false,
+						},
+						select: {
+							value: true,
+						},
+					},
+				},
+			}),
+			this.prismaService.expense.findMany({
+				where: {
+					profileId,
+					installment: {
+						some: {
+							dueDate: {
+								gte: new Date(currentDate.getFullYear(), currentMonth - 1),
+								lt: new Date(currentDate.getFullYear(), currentMonth),
+							},
+							paid: false,
+						},
+					},
+				},
+				include: {
+					installment: {
+						where: {
+							dueDate: {
+								gte: new Date(currentDate.getFullYear(), currentMonth - 1),
+								lt: new Date(currentDate.getFullYear(), currentMonth),
+							},
+							paid: false,
+						},
+						select: {
+							value: true,
+						},
+					},
+				},
+			}),
+		]);
+
+		const nextMonthTotalValue = nextMonthExpenses.reduce((total, expense) => {
+			expense.installment?.forEach((installment) => {
+				total += +installment.value;
+			});
+			return total;
+		}, 0);
+
+		const currentMonthTotalValue = currentMonthExpenses.reduce(
+			(total, expense) => {
+				expense.installment?.forEach((installment) => {
+					total += +installment.value;
+				});
+				return total;
+			},
+			0,
+		);
+
+		expenseStatistics.totalValue = nextMonthTotalValue;
+
+		if (currentMonthTotalValue > 0) {
+			expenseStatistics.percentChangeLastMonth =
+				((nextMonthTotalValue - currentMonthTotalValue) /
+					currentMonthTotalValue) *
+				100;
+		}
+
+		return expenseStatistics;
 	}
 
 	async show(id: number): Promise<Expense> {

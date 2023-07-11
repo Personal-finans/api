@@ -8,6 +8,7 @@ import {
 	Put,
 	UseGuards,
 } from '@nestjs/common';
+import { Profile } from '@prisma/client';
 import { ParamId } from '../../decorators/param-id.decorator';
 import { User } from '../../decorators/user.decorator';
 import { AuthGuard } from '../../guards/auth.guard';
@@ -25,8 +26,8 @@ export class CardController {
 	}
 
 	@Get()
-	async list(@User('id') userId) {
-		return this.cardService.list(userId);
+	async list(@User('profile') { id: profileId }: Profile) {
+		return this.cardService.list(profileId);
 	}
 
 	@Get(':id')
