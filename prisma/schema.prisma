@@ -24,7 +24,7 @@ model User {
 model Profile {
   id        Int      @id @default(autoincrement())
   name      String
-  photoUrl  String?
+  photoUrl  String?	 @db.VarChar(300)
   bio       String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
