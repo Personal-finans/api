@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hashPassword } from 'src/shared/utils/hashPassword';
@@ -18,7 +22,7 @@ export class UserService {
 		});
 
 		if (emailExists) {
-			throw new NotFoundException('Este email ja esta sendo utilizado.');
+			throw new BadRequestException('Este email ja esta sendo utilizado.');
 		}
 
 		data.password = await hashPassword(data.password);
