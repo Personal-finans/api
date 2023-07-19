@@ -36,7 +36,7 @@ export class UserService {
 		return this.prismaService.user.findMany();
 	}
 
-	async show(id: number): Promise<User> {
+	async show(id: number) {
 		await this.exists(id);
 
 		return this.prismaService.user.findUnique({

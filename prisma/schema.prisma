@@ -12,7 +12,6 @@ model User {
   email     String   @unique
   password  String
   status    Int?     @default(1)
-  deleted   Boolean? @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -22,10 +21,12 @@ model User {
 }
 
 model Profile {
-  id        Int      @id @default(autoincrement())
-  name      String
-  photoUrl  String?	 @db.VarChar(300)
-  bio       String?
+  id Int @id @default(autoincrement())
+
+  name     String
+  photoUrl String? @db.VarChar(300)
+  bio      String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -34,23 +35,26 @@ model Profile {
 
   expense Expense[]
 
-  card Card[]
+  creditCard CreditCard[]
 
   @@map("profiles")
 }
 
 model Expense {
-  id                   Int      @id @default(autoincrement())
-  creatorId            Int
+  id        Int @id @default(autoincrement())
+  creatorId Int
+
   name                 String
   description          String?
-  totalValue           Decimal
+  value                Decimal
   numberOfInstallments Int
-  dueDate              DateTime @db.Date
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  closesDay            DateTime @db.Date
+  paymentMethodId      Int
 
-  Profile   Profile @relation(fields: [profileId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile   Profile @relation(fields: [profileId], references: [id])
   profileId Int
 
   installment Installment[]
@@ -59,29 +63,52 @@ model Expense {
 }
 
 model Installment {
-  id        Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
   value     Decimal
-  paid      Boolean
+  paid      Boolean @default(false)
   number    Int
-  dueDate   DateTime @db.Date
+  closesDay Int
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  Expense   Expense @relation(fields: [expenseId], references: [id])
+  expense   Expense @relation(fields: [expenseId], references: [id])
   expenseId Int
 
   @@map(name: "installments")
 }
 
-model Card {
-  id             Int      @id @default(autoincrement())
-  bankName       String
-  invoiceDueDate Int
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+model CreditCard {
+  id Int @id @default(autoincrement())
 
-  Profile   Profile @relation(fields: [profileId], references: [id])
+  accountName   String
+  limit         Decimal
+  closesDay     Int
+  expirationDay Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  financialInstitution   FinancialInstitution @relation(fields: [financialInstitutionId], references: [id])
+  financialInstitutionId Int                  @unique
+
+  profile   Profile @relation(fields: [profileId], references: [id])
   profileId Int     @unique
 
-  @@map(name: "cards")
+  @@map(name: "creditCards")
+}
+
+model FinancialInstitution {
+  id Int @id @default(autoincrement())
+
+  name    String
+  iconUrl String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creditCard CreditCard?
+
+  @@map(name: "financialInstitutions")
 }
