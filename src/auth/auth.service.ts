@@ -1,3 +1,4 @@
+import { MailerService } from '@nestjs-modules/mailer';
 import {
 	BadRequestException,
 	Injectable,
@@ -8,7 +9,9 @@ import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { UserService } from 'src/domain/user/user.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateProfileDTO } from '../domain/profile/dto/create-profile.dto';
 import { ProfileService } from '../domain/profile/profile.service';
+import { AuthRegisterDTO } from './dto';
 
 export interface JWTPayload {
 	id: number;
@@ -17,16 +20,24 @@ export interface JWTPayload {
 	iss: string;
 }
 
+export enum Issuer {
+	LOGIN = 'login',
+	FORGET = 'forget',
+}
+
+export enum ExpiresIn {
+	LOGIN = '1d',
+	FORGET = '60 minutes',
+}
+
 @Injectable()
 export class AuthService {
-	private readonly issuer = 'login';
-	private readonly expiresIn = process.env.JWT_EXPIRES_IN;
-
 	constructor(
 		private readonly jwtService: JwtService,
 		private readonly prismaService: PrismaService,
 		private readonly userService: UserService,
 		private readonly profileService: ProfileService,
+		private readonly mailerService: MailerService,
 	) {}
 
 	async createToken(user: User) {
@@ -38,8 +49,8 @@ export class AuthService {
 					id: user.id,
 				},
 				{
-					expiresIn: this.expiresIn,
-					issuer: this.issuer,
+					expiresIn: ExpiresIn.LOGIN,
+					issuer: Issuer.LOGIN,
 				},
 			),
 			user: userWithoutPassword,
@@ -88,20 +99,84 @@ export class AuthService {
 		return this.createToken(user);
 	}
 
-	// TODO: Implementar forget
 	async forget(email: string) {
-		return email;
+		const user = await this.prismaService.user.findFirst({
+			where: { email },
+		});
+
+		if (!user) {
+			return false;
+		}
+
+		const token = this.jwtService.sign(
+			{
+				id: user.id,
+			},
+			{
+				expiresIn: ExpiresIn.FORGET,
+				issuer: Issuer.FORGET,
+			},
+		);
+
+		await this.mailerService.sendMail({
+			subject: 'Recuperação de Senha',
+			to: user.email,
+			template: 'forget',
+			context: {
+				email: user.email,
+				token: token,
+			},
+		});
+
+		return true;
 	}
 
-	// TODO: Implementar reset
 	async reset(password: string, token: string) {
-		return password;
+		try {
+			const data = await this.jwtService.verifyAsync(token, {
+				issuer: 'forget',
+			});
+
+			if (isNaN(Number(data.id))) {
+				throw new BadRequestException('Token invalido');
+			}
+
+			const salt = await bcrypt.genSalt();
+			password = await bcrypt.hash(password, salt);
+
+			const user = await this.prismaService.user.update({
+				where: {
+					id: data.id,
+				},
+				data: {
+					password,
+				},
+			});
+
+			return this.createToken(user);
+		} catch (error) {
+			throw new BadRequestException(error);
+		}
 	}
 
-	async register(data: any) {
-		const user = await this.userService.create(data);
-		await this.profileService.create(null, user);
+	async register({ name, email, password }: AuthRegisterDTO) {
+		const user = await this.userService.create({ email, password });
+		const profile: CreateProfileDTO = {
+			bio: null,
+			name: name,
+			photoUrl: null,
+		};
+		await this.profileService.create(profile, user);
 		const userWithProfile = await this.userService.show(user.id);
+
+		await this.mailerService.sendMail({
+			subject: 'Bem-vindo(a) ao Finans - Seu parceiro financeiro pessoal!',
+			to: user.email,
+			template: 'welcome',
+			context: {
+				name: userWithProfile.profile.name,
+			},
+		});
 
 		return this.createToken(userWithProfile);
 	}
