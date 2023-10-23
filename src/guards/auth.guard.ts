@@ -5,7 +5,7 @@ import {
 	NotFoundException,
 } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
-import { UserService } from 'src/domain/user/user.service';
+import { UserService } from 'src/models/user/user.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

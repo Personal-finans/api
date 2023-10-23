@@ -1,13 +1,19 @@
-import { IsBoolean, IsDate, IsNotEmpty, IsNumber } from 'class-validator';
+import {
+	IsBoolean,
+	IsDate,
+	IsDecimal,
+	IsNotEmpty,
+	IsNumber,
+} from 'class-validator';
 
 export class CreateInstallmentDTO {
 	@IsNotEmpty()
-	@IsBoolean()
-	paid: boolean;
+	@IsDecimal()
+	value: number;
 
 	@IsNotEmpty()
-	@IsNumber()
-	value: number;
+	@IsBoolean()
+	paid: boolean;
 
 	@IsNotEmpty()
 	@IsNumber()
@@ -15,7 +21,7 @@ export class CreateInstallmentDTO {
 
 	@IsNotEmpty()
 	@IsDate()
-	dueDate: Date;
+	closesDay: Date;
 
 	@IsNotEmpty()
 	@IsNumber()

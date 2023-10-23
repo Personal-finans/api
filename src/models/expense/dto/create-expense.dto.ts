@@ -1,5 +1,6 @@
 import {
 	IsDate,
+	IsDecimal,
 	IsNotEmpty,
 	IsNumber,
 	IsOptional,
@@ -16,8 +17,8 @@ export class CreateExpenseDTO {
 	description?: string;
 
 	@IsNotEmpty()
-	@IsNumber()
-	totalValue: number;
+	@IsDecimal()
+	value: number;
 
 	@IsNotEmpty()
 	@IsNumber()
@@ -25,5 +26,9 @@ export class CreateExpenseDTO {
 
 	@IsDate()
 	@IsNotEmpty()
-	dueDate: Date;
+	closesDay: Date;
+
+	@IsNumber()
+	@IsNotEmpty()
+	paymentMethodId: number;
 }

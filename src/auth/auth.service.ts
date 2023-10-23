@@ -7,10 +7,10 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { UserService } from 'src/domain/user/user.service';
+import { UserService } from 'src/models/user/user.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateProfileDTO } from '../domain/profile/dto/create-profile.dto';
-import { ProfileService } from '../domain/profile/profile.service';
+import { CreateProfileDTO } from '../models/profile/dto/create-profile.dto';
+import { ProfileService } from '../models/profile/profile.service';
 import { AuthRegisterDTO } from './dto';
 
 export interface JWTPayload {

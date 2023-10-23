@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Installment } from '@prisma/client';
+import { Installment, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
 	CreateInstallmentDTO,
@@ -15,7 +15,7 @@ export class InstallmentService {
 		paid,
 		value,
 		expenseId,
-		dueDate,
+		closesDay,
 		number,
 	}: CreateInstallmentDTO): Promise<Installment> {
 		await this.expenseExists(expenseId);
@@ -24,7 +24,7 @@ export class InstallmentService {
 			paid,
 			value,
 			expenseId,
-			dueDate,
+			closesDay,
 			number,
 		};
 
@@ -34,15 +34,17 @@ export class InstallmentService {
 	async createMany(body: CreateInstallmentDTO[], expenseId: number) {
 		await this.expenseExists(expenseId);
 
-		const data = body.map(({ expenseId, value, paid, dueDate, number }) => {
-			return {
-				paid,
-				value,
-				expenseId,
-				dueDate,
-				number,
-			};
-		});
+		const data: any[] = body.map(
+			({ expenseId, value, paid, closesDay, number }) => {
+				return {
+					paid,
+					value: new Prisma.Decimal(value),
+					expenseId,
+					closesDay,
+					number,
+				};
+			},
+		);
 
 		const installments = this.prismaService.installment.createMany({ data });
 		return installments;
@@ -68,7 +70,7 @@ export class InstallmentService {
 
 	async updatePartial(
 		id: number,
-		{ paid, value, expenseId, dueDate, number }: UpdatePatchInstallmentDTO,
+		{ paid, value, expenseId, closesDay, number }: UpdatePatchInstallmentDTO,
 	) {
 		await this.exists(id);
 		const data: any = {};
@@ -76,7 +78,7 @@ export class InstallmentService {
 		if (paid) data.paid = paid;
 		if (value) data.value = value;
 		if (expenseId) data.expenseId = expenseId;
-		if (dueDate) data.dueDate = dueDate;
+		if (closesDay) data.closesDay = closesDay;
 		if (number) data.number = number;
 
 		return this.prismaService.installment.update({

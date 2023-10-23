@@ -25,8 +25,11 @@ export class ExpenseController {
 	constructor(private readonly expenseService: ExpenseService) {}
 
 	@Post()
-	async create(@Body() body: CreateExpenseDTO, @User() user): Promise<Expense> {
-		return this.expenseService.create(body, user);
+	async create(
+		@Body() body: CreateExpenseDTO,
+		@User('profile') { id: profileId }: Profile,
+	): Promise<Expense> {
+		return this.expenseService.create(body, profileId);
 	}
 
 	@Get()
