@@ -3,53 +3,46 @@ import {
 	Controller,
 	Delete,
 	Get,
-	Patch,
+	Param,
 	Post,
 	Put,
 } from '@nestjs/common';
-import { ParamId } from 'src/decorators/param-id.decorator';
-import { CreateUserDTO, UpdatePatchUserDTO, UpdatePutUserDTO } from './dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CreateUserDTO, UpdatePutUserDTO } from './dto';
+import { User } from './entities/user.entity';
 import { UserService } from './user.service';
 
+@ApiBearerAuth()
+@ApiTags('Users')
 @Controller('users')
 export class UserController {
 	constructor(private readonly userService: UserService) {}
 
-	@Post()
-	async create(@Body() body: CreateUserDTO) {
-		return this.userService.create(body);
-	}
-
 	@Get()
-	async list() {
-		return this.userService.list();
+	async findAll(): Promise<User[]> {
+		return this.userService.findAll();
 	}
 
 	@Get(':id')
-	async show(@ParamId('id') id: number) {
-		return this.userService.show(id);
+	async findById(@Param('id') id: string): Promise<User> {
+		return this.userService.findById(id);
 	}
 
-	@Get(':id/profile')
-	async showProfile(@ParamId('id') id: number) {
-		return this.userService.showProfile(id);
+	@Post()
+	async create(@Body() data: CreateUserDTO): Promise<User> {
+		return this.userService.create(data);
 	}
 
 	@Put(':id')
-	async update(@Body() body: UpdatePutUserDTO, @ParamId('id') id: number) {
-		return this.userService.update(id, body);
-	}
-
-	@Patch(':id')
-	async updatePartial(
-		@Body() body: UpdatePatchUserDTO,
-		@ParamId('id') id: number,
-	) {
-		return this.userService.updatePartial(id, body);
+	async update(
+		@Param('id') id: string,
+		@Body() data: UpdatePutUserDTO,
+	): Promise<User> {
+		return this.userService.update(id, data);
 	}
 
 	@Delete(':id')
-	async delete(@ParamId('id') id: number) {
+	async delete(@Param('id') id: string): Promise<void> {
 		return this.userService.delete(id);
 	}
 }

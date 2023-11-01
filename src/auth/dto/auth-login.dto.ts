@@ -1,11 +1,3 @@
-import { IsEmail, IsStrongPassword } from 'class-validator';
+import { CreateUserDTO } from '../../models/user/dto';
 
-export class AuthLoginDTO {
-	@IsEmail()
-	email: string;
-
-	@IsStrongPassword({
-		minLength: 6,
-	})
-	password: string;
-}
+export class AuthLoginDTO extends CreateUserDTO {}

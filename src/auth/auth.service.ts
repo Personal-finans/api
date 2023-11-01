@@ -5,12 +5,10 @@ import {
 	UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { UserService } from 'src/models/user/user.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateProfileDTO } from '../models/profile/dto/create-profile.dto';
-import { ProfileService } from '../models/profile/profile.service';
+import { User } from '../models/user/entities/user.entity';
+import { UserRepository } from '../models/user/repositories/user.repository';
 import { AuthRegisterDTO } from './dto';
 
 export interface JWTPayload {
@@ -33,15 +31,17 @@ export enum ExpiresIn {
 @Injectable()
 export class AuthService {
 	constructor(
+		@InjectRepository(User)
+		private readonly userRepository: UserRepository,
 		private readonly jwtService: JwtService,
-		private readonly prismaService: PrismaService,
-		private readonly userService: UserService,
-		private readonly profileService: ProfileService,
+		// private readonly profileService: ProfileService,
 		private readonly mailerService: MailerService,
 	) {}
 
-	async createToken(user: User) {
+	async createToken(user: any) {
 		const { password, ...userWithoutPassword } = user;
+
+		console.log(password);
 
 		return {
 			accessToken: await this.jwtService.signAsync(
@@ -79,12 +79,7 @@ export class AuthService {
 	}
 
 	async login(email: string, password: string) {
-		const user = await this.prismaService.user.findFirst({
-			where: { email },
-			include: {
-				profile: true,
-			},
-		});
+		const user = await this.userRepository.findById(email);
 
 		if (!user) {
 			throw new UnauthorizedException('Email e/ou senha incorretos.');
@@ -100,9 +95,7 @@ export class AuthService {
 	}
 
 	async forget(email: string) {
-		const user = await this.prismaService.user.findFirst({
-			where: { email },
-		});
+		const user = await this.userRepository.findById(email);
 
 		if (!user) {
 			return false;
@@ -144,13 +137,8 @@ export class AuthService {
 			const salt = await bcrypt.genSalt();
 			password = await bcrypt.hash(password, salt);
 
-			const user = await this.prismaService.user.update({
-				where: {
-					id: data.id,
-				},
-				data: {
-					password,
-				},
+			const user = await this.userRepository.update(data.id, {
+				password,
 			});
 
 			return this.createToken(user);
@@ -160,23 +148,27 @@ export class AuthService {
 	}
 
 	async register({ name, email, password }: AuthRegisterDTO) {
-		const user = await this.userService.create({ email, password });
-		const profile: CreateProfileDTO = {
-			bio: null,
-			name: name,
-			photoUrl: null,
-		};
-		await this.profileService.create(profile, user);
-		const userWithProfile = await this.userService.show(user.id);
+		const user = await this.userRepository.create({ email, password });
 
-		await this.mailerService.sendMail({
-			subject: 'Bem-vindo(a) ao Finans - Seu parceiro financeiro pessoal!',
-			to: user.email,
-			template: 'welcome',
-			context: {
-				name: userWithProfile.profile.name,
-			},
-		});
+		console.log(name);
+
+		// const profile: CreateProfileDTO = {
+		// 	bio: null,
+		// 	name: name,
+		// 	photoUrl: null,
+		// };
+
+		// await this.profileService.create(profile, user);
+		const userWithProfile = await this.userRepository.findById(user.id);
+
+		// await this.mailerService.sendMail({
+		// 	subject: 'Bem-vindo(a) ao Finans - Seu parceiro financeiro pessoal!',
+		// 	to: user.email,
+		// 	template: 'welcome',
+		// 	context: {
+		// 		name: userWithProfile.profile.name,
+		// 	},
+		// });
 
 		return this.createToken(userWithProfile);
 	}
