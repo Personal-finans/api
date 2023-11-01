@@ -1,8 +1,8 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { ProfileModule } from 'src/models/profile/profile.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from 'src/models/user/user.module';
-import { PrismaModule } from 'src/prisma/prisma.module';
+import { User } from '../models/user/entities/user.entity';
 import { UserService } from '../models/user/user.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -13,8 +13,8 @@ import { AuthService } from './auth.service';
 			secret: process.env.JWT_SIGNATURE,
 		}),
 		forwardRef(() => UserModule),
-		forwardRef(() => ProfileModule),
-		PrismaModule,
+		// forwardRef(() => ProfileModule),
+		TypeOrmModule.forFeature([User]),
 	],
 	controllers: [AuthController],
 	providers: [AuthService, UserService],
