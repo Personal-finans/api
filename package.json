@@ -9,6 +9,7 @@
 		"build": "nest build",
 		"format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
 		"start": "nest start",
+		"start:swc": "nest start -b swc",
 		"dev": "nest start --watch",
 		"debug": "nest start --debug --watch",
 		"start:prod": "node dist/main",
