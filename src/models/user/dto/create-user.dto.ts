@@ -11,8 +11,8 @@ export class CreateUserDTO {
 
 	@ApiProperty({
 		description:
-			'Senha utilizado no login, deve conter pelo menos 6 caracteres',
-		example: 'usuario123',
+			'Senha utilizado no login, deve conter pelo menos 6 caracteres, 1 letra maiuscula, e 1 algum caractere especial',
+		example: 'Usuario123@',
 	})
 	@IsStrongPassword({
 		minLength: 6,

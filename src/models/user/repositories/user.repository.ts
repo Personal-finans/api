@@ -1,19 +1,30 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BaseRepository } from '../../../shared/base/base-repository';
 import { User } from '../entities/user.entity';
-import { IUserRepository } from '../interfaces/user.interface';
 
 @Injectable()
-export class UserRepository
-	extends BaseRepository<User>
-	implements IUserRepository
-{
-	constructor(repository: Repository<User>) {
-		super(repository);
+export class UserRepository extends Repository<User> {
+	constructor(
+		@InjectRepository(User)
+		private repository: Repository<User>,
+	) {
+		super(repository.target, repository.manager, repository.queryRunner);
+	}
+
+	findAll(): Promise<User[]> {
+		return this.repository.find();
+	}
+
+	findById(id: string): Promise<User> {
+		return this.repository.findOne({
+			where: {
+				id,
+			},
+		});
 	}
 
 	findByEmail(email: string): Promise<User> {
-		return this.findByEmail(email);
+		return this.repository.findOneBy({ email });
 	}
 }

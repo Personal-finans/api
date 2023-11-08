@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { BaseService } from '../../shared/base/base-service';
+import { Profile } from './entities/profile.entity';
 
 @Injectable()
-export class ProfileService {
+export class ProfileService extends BaseService<Profile> {
 	// constructor(private readonly prismaService: PrismaService) {}
 	// async create(body: CreateProfileDTO, user: User): Promise<Profile> {
 	// 	const isPerfilExist = await this.prismaService.profile.count({

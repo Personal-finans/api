@@ -5,10 +5,9 @@ import {
 	UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from '../models/user/entities/user.entity';
-import { UserRepository } from '../models/user/repositories/user.repository';
+import { UserService } from '../models/user/user.service';
 import { AuthRegisterDTO } from './dto';
 
 export interface JWTPayload {
@@ -31,14 +30,13 @@ export enum ExpiresIn {
 @Injectable()
 export class AuthService {
 	constructor(
-		@InjectRepository(User)
-		private readonly userRepository: UserRepository,
+		private readonly userService: UserService,
 		private readonly jwtService: JwtService,
 		// private readonly profileService: ProfileService,
 		private readonly mailerService: MailerService,
 	) {}
 
-	async createToken(user: any) {
+	async createToken(user: User) {
 		const { password, ...userWithoutPassword } = user;
 
 		console.log(password);
@@ -79,7 +77,8 @@ export class AuthService {
 	}
 
 	async login(email: string, password: string) {
-		const user = await this.userRepository.findById(email);
+		const user = await this.userService.findByEmail(email);
+		console.log(user);
 
 		if (!user) {
 			throw new UnauthorizedException('Email e/ou senha incorretos.');
@@ -95,7 +94,7 @@ export class AuthService {
 	}
 
 	async forget(email: string) {
-		const user = await this.userRepository.findById(email);
+		const user = await this.userService.findByEmail(email);
 
 		if (!user) {
 			return false;
@@ -137,9 +136,7 @@ export class AuthService {
 			const salt = await bcrypt.genSalt();
 			password = await bcrypt.hash(password, salt);
 
-			const user = await this.userRepository.update(data.id, {
-				password,
-			});
+			const user = await this.userService.update(data.id, { password });
 
 			return this.createToken(user);
 		} catch (error) {
@@ -148,7 +145,12 @@ export class AuthService {
 	}
 
 	async register({ name, email, password }: AuthRegisterDTO) {
-		const user = await this.userRepository.create({ email, password });
+		const isEmailExist = await this.userService.findByEmail(email);
+
+		if (isEmailExist) {
+			throw new BadRequestException('Não é possivel utilizar este email.');
+		}
+		const user = await this.userService.create({ email, password });
 
 		console.log(name);
 
@@ -159,7 +161,7 @@ export class AuthService {
 		// };
 
 		// await this.profileService.create(profile, user);
-		const userWithProfile = await this.userRepository.findById(user.id);
+		const userWithProfile = await this.userService.findById(user.id);
 
 		// await this.mailerService.sendMail({
 		// 	subject: 'Bem-vindo(a) ao Finans - Seu parceiro financeiro pessoal!',

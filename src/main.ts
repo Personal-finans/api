@@ -7,6 +7,8 @@ import { AppModule } from './app.module';
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
 
+	app.setGlobalPrefix('api/v1');
+
 	const config = new DocumentBuilder()
 		.setTitle('API Finanças')
 		.setDescription('Documentação da API de Finanças')
@@ -14,7 +16,7 @@ async function bootstrap() {
 		.build();
 
 	const document = SwaggerModule.createDocument(app, config);
-	SwaggerModule.setup('api', app, document);
+	SwaggerModule.setup('swagger', app, document);
 
 	app.useGlobalPipes(
 		new ValidationPipe({

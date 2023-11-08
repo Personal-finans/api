@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import { ConfigModule } from './config/config.modules';
+import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
-import { MailerModule } from './mailer/mailer.module';
+import { MailerModule } from './shared/mailer/mailer.module';
 import { ModelsModule } from './models/models.module';
 import { ThrottlerModule } from './throttler/throttler.module';
 
 @Module({
 	imports: [
 		MailerModule,
-		// AuthModule,
+		AuthModule,
 		ModelsModule,
 		ConfigModule,
 		DatabaseModule,

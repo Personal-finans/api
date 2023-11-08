@@ -1,9 +1,13 @@
-import { Controller, UseGuards } from '@nestjs/common';
-import { AuthGuard } from 'src/guards/auth.guard';
+import { BaseController } from '../../shared/base/base-controller';
+import { Profile } from './entities/profile.entity';
+import { ProfileService } from './profile.service';
 
-@UseGuards(AuthGuard)
-@Controller('profiles')
-export class ProfileController {
+// @UseGuards(AuthGuard)
+// @Controller('profiles')
+export class ProfileController extends BaseController<Profile> {
+	constructor(private readonly service: ProfileService) {
+		super(service);
+	}
 	// constructor(private readonly profileService: ProfileService) {}
 	// @Post()
 	// async create(@Body() body: CreateProfileDTO, @User() user) {

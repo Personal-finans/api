@@ -1,3 +1,4 @@
+import { DeepPartial, DeleteResult } from 'typeorm';
 import { BaseEntity } from './base-entity';
 import { IRepository } from './irepository';
 
@@ -12,7 +13,7 @@ export abstract class BaseService<T extends BaseEntity> {
 		return this.repository.findById(id);
 	}
 
-	async create(data: Partial<T>): Promise<T> {
+	async create(data: DeepPartial<T>): Promise<T> {
 		return this.repository.create(data);
 	}
 
@@ -20,7 +21,7 @@ export abstract class BaseService<T extends BaseEntity> {
 		return this.repository.update(id, data);
 	}
 
-	async delete(id: string): Promise<void> {
+	async delete(id: string): Promise<DeleteResult> {
 		return this.repository.delete(id);
 	}
 }

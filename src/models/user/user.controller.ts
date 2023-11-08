@@ -6,14 +6,19 @@ import {
 	Param,
 	Post,
 	Put,
+	UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { DeleteResult } from 'typeorm';
+import { AuthGuard } from '../../guards/auth.guard';
 import { CreateUserDTO, UpdatePutUserDTO } from './dto';
 import { User } from './entities/user.entity';
 import { UserService } from './user.service';
 
 @ApiBearerAuth()
 @ApiTags('Users')
+@UseGuards(AuthGuard)
+// @UseInterceptors(LogInterceptor)
 @Controller('users')
 export class UserController {
 	constructor(private readonly userService: UserService) {}
@@ -42,7 +47,7 @@ export class UserController {
 	}
 
 	@Delete(':id')
-	async delete(@Param('id') id: string): Promise<void> {
+	async delete(@Param('id') id: string): Promise<DeleteResult> {
 		return this.userService.delete(id);
 	}
 }
